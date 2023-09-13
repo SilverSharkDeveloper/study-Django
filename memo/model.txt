@@ -1,0 +1,116 @@
+Model
+	Django에서 모델이라는 추상화된 클래스를 사용하여 데이터베이스에 테이블을 정의할 수 있다.
+	models.Model을 상속받은 클래스로 구현할 수 있으며, 내부 클래스로 Meta 클래스를 선언할 수 있다.
+
+Model Convention
+	모델 내 코드를 작성할 때 아래의 순서에 맞춰 작성하는 것을 권장한다.
+
+	1. Constant for choices
+	2. All databases Fields
+	3. Custom manager attributes
+	4. class Meta
+	5. def __str__()
+	6. def save()
+	7. def get_absolute_url()
+	8. Any custom methods
+
+1. Constant for choices
+	DB에 저장할 값과 실제 화면에 보여지는 값이 다를 경우 미리 튜플 형태로 선언해 놓고 사용한다.
+
+	CONSTANT = [
+		('DB 저장 값', '보여질 값'),
+		...
+	]
+
+2. All databases Fields
+
+	default는 제약조건을 추가해주지 않고, 파이썬에서 값을 넣어주는 역할을 한다.
+	
+	ForeignKey(to, verbose_name, related_name, related_query_name, on_delete, null)
+	OneToOneField(to, verbose_name, related_name, related_query_name, on_delete, null)
+	ManyToManyField(to, verbose_name, related_name, related_query_name, through)
+
+		related_name
+			역참조가 필요한 다대다 또는 일대다 관계에서 유용하게 사용된다.
+			B필드에 A객체를 참조 시 b.a로 접근할 수 있으나 역참조인 a.b로는 접근할 수 없다.
+			A필드에는 B필드가 없기 때문이다. 이 때에는 Django에서 자동으로 만들어지는
+			_set객체를 사용하여 역참조가 가능하다. 즉, a.b_set으로 역참조가 가능하다.
+			만약 _set객체의 이름을 다른 이름으로 사용하고자 할 때 바로 related_name을 사용한다.
+
+		related_query_name
+			DML 메소드 사용 시 속성명으로 사용될 이름. 즉, 쿼리에 사용될 이름을 작성한다.
+
+		on_delete
+			삭제 시 CASCADE, SET_NULL
+
+
+	CharField(verbose_name, max_length, choices, unique, blank, null, default)
+		최대 길이 제한이 필요한 경우
+	TextField(verbose_name, null=False, blank=True)
+		최대 길이 제한이 필요 없을 경우
+
+		문자열 필드는 null=False로 하고 필수 요소가 아니라면 blank=True로 설정한다.
+		이렇게 설정하는 이유는 null과 빈 값을 "null이거나 빈 문자열일 경우 빈 값이다"라고 검사할 필요 없이
+		"빈 문자열인지"로만 판단할 수 있게 되기 때문이다.
+
+	PositiveSmallIntegerField(verbose_name, choices, null, default)
+	SmallIntegerField(verbose_name, choices, null, default)
+	IntegerField(verbose_name, choices, null, default) : 4byte
+
+		정수 필드는 max_length를 직접 지정하지 않고 기본적으로 byte가 정해져있다.
+
+	BooleanField(verbose_name, default)
+
+	DateField(verbose_name, null, default)
+	TimeField(verbose_name, null, default)
+	DateTimeField(verbose_name, null, default)
+
+		auto_now=True 설정하면 해당 객체가 변경될 때마다
+		자동으로 필드 값을 현재 시간으로 수정한다. 마지막 수정 날짜 항목으로 사용된다.
+		auto_now_add=True 설정하면 최초 한 번만
+		자동으로 필드 값을 현재 시간으로 수정한다. 처음 등록된 날짜 항목으로 사용된다.
+
+3. Custom manager attributes
+	데이터베이스와 상호작용하는 인터페이스이며, Model.objects 속성을 통해 사용한다.
+	Custom Manager와 Custom QuerySet을 통해 사용할 수 있으며,
+	공통적으로 사용되는 쿼리를 공통 함수로 정의할 수 있고 실제 동작을 숨길 수 있다.
+
+
+4. class Meta
+	Model 클래스 안에 선언되는 내부 클래스이며, 모델에 대한 기본 설정들을 변경할 수 있다.
+	Meta 클래스가 작동하기 위해서는 정해진 속성과 속성 값을 작성해야 하고
+	이를 통해 Django를 훨씬 편하게 사용할 수 있다.
+
+	ordering = ['필드명']	# 오름차순
+	ordering = ['-필드명']	# 내림차순
+
+	db_table = '테이블명'	# 테이블명 작성
+
+	abstract = True		# Table로 생성하지 않음, 객체 진영에서의 상속관계 시 부모 클래스에 설정
+				  자식 클래스의 Meta는 abstract = False로 자동 설정
+
+5. def __str__()
+	객체 조회 시 원하는 데이터를 직접 눈으로 확인하고자 할 때 사용하며,
+	객체 출력 시 자동으로 사용되는 메소드이다.
+	모델 필드 내에서 재정의하여 원하는 필드를 문자열로 리턴하면 앞으로 객체 출력 시 해당 값이 출력된다.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

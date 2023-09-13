@@ -1,0 +1,120 @@
+생성(CREATE)
+   1. create()와 save()
+      모델명.objects.create()는 전달한 값으로 초기화 된 새로운 객체를 생성하고 테이블에 저장한다. 
+      하지만 객체명.save()는 이미 객체를 생성한 뒤 사용하기 때문에 객체를 리턴하지 않는다.
+
+      일반적으로 기존 객체에 자주 영향을 미치는 메소드는 자신을 리턴하지 않도록 하는 것이
+      Python에서 좋은 사례로 간주된다.
+      예를 들어 sorted(list)는 정렬된 목록을 리턴하지만 list.sort()는 원본을 정렬한 뒤
+      아무 것도 리턴하지 않는다.
+      만약 객체로 접근한 메소드가 자신을 리턴하게 되면 계속 이어서 코드를 작성하게 되고(메소드 체인),
+      이 때 특정 버그나 문제가 중간에 발생하게 되면 찾기가 힘들 뿐더러 전체 기능에 문제가 생길 수 있다.
+
+   2. bulk_create()
+      모델명.objects.bulk_create([])는 전달한 list로 초기화 된 여러 개의 객체를 생성하고 테이블에 저장한다.
+      생성된 객체들은 list 타입으로 리턴된다.
+
+   3. get_or_create()
+      모델명.objects.get_or_create()는 테이블에 객체가 있으면 가져오고, 없으면 새롭게 생성하고 저장한다.
+      두 칸짜리 tuple 타입으로 리턴되며, 첫 번째는 객체, 두 번째 생성여부인 bool 타입이 담겨있다.
+
+조회(READ)
+   1. get()
+      테이블에서 조건에 맞는 한 개의 객체를 조회한다.
+      조회된 값이 없으면 DoseNotExist, 2개 이상이면 MultipleObjectsReturned가 발생하기 때문에
+      조회할 값이 1개일 때만 사용한다.
+
+   2. all()
+      테이블에서 전체 정보를 조회한다.
+      QuerySet 객체를 리턴하며, 조회된 객체들이 들어있다.
+      QuerySet이란, 쿼리의 결과를 전달받은 모델 객체 목록이다. 리스트와 구조는 같지만,
+      파이썬 기본 자료구조가 아니기 때문에 형변환이나 serializers가 필요하다.
+
+   3. values()
+      테이블에서 전체 정보를 조회한다.
+      QuerySet 객체를 리턴하며, 조회된 객체가 dict 타입으로 들어있다.
+      필드 이름을 전달하면 원하는 필드 정보만 가져올 수 있다.
+      참조 중인 테이블의 필드를 가져오기 위해서는 '[참조중인 객체명]__[필드명]'으로 작성한다.
+
+      예를 들어 아래와 같이 작성한다.
+      Post.objects.values('member__name', 'post_title', 'post_content')
+
+   4. values_list()
+      테이블에서 전체 정보를 리턴한다.
+      QuerySet 객체를 리턴하면, 조회된 객체가 tuple 타입으로 들어있다.
+      KEY가 없기 때문에 value만 존재하며, 인덱스로만 접근 가능하다.
+
+   5. filter()
+      조건에 맞는 행을 조회한다.
+      QuerySet 객체를 리턴하며, 조회된 객체들이 들어있다.
+      조건에 맞는 결과가 한 개도 없을 경우 빈 QuerySet이 리턴된다.
+
+   6. exists()
+      filter()와 함께 사용해서 filter 조건에 맞는 데이터가 있는지 조회한다.
+
+   7. exclude()
+      조건에 맞지 않는 행을 조회한다.
+      QuerySet 객체를 리턴하며, 조회된 객체들이 들어있다.
+      조건에 맞는 결과가 한 개도 없을 경우 빈 QuerySet이 리턴된다.
+
+   8. AND, OR
+      모델명.objects.filter() & 모델명.objects.filter()
+      모델명.objects.filter() | 모델명.objects.filter()
+
+      모델명.objects.filter(key=value, key=value)
+      모델명.objects.filter(Q(key=value) | Q(key=value))
+
+   9. first(), last()
+      모델명.objects.first()는 조건에 맞는 QuerySet 결과 중 첫 번째 객체를 리턴하고
+      모델명.objects.last()는 조건에 맞는 QuerySet 결과 중 마지막 객체를 리턴한다.
+
+   10. count()
+      모델명.objects.filter().count()로 사용하며 조건에 맞는 결과 개수를 리턴한다.
+
+   11. order_by()
+      특정 필드를 기준으로 정렬을 진행한다.
+
+      모델명.objects.order_by('필드명')은 오름차순이며,
+      모델명.objects.order_by('-필드명')은 내림차순이다.
+
+   12. annotate()
+      결과 테이블에서 컬럼을 다른 이름으로 사용하거나 다른 연산을 수행한 뒤 새로운 이름을 만들어낸다.
+      3.에서 참조 중인 테이블의 필드를 가져올 때 항상 참조객체명을 작성해야 했다.
+      annotate()를 사용하여 편하게 사용할 수 있게 된다.
+
+      예를 들어 아래와 같다.
+      Post.objects.annotate(
+         member_name=F('member___member_name')
+      ).values('member_name', 'post_title', 'post_content')
+      
+   13. aggregate()
+      QuerySet객체.aggregate(key=집계함수('필드명')는 전체를 대상으로 하고
+      QuerySet객체.values("묶을 필드명").annotate(key=집계함수('필드명'))는 그룹을 대상으로 한다.
+
+수정(UPDATE)
+   1. update()
+      존재하는 객체의 필드를 수정하고 수정된 행의 수를 리턴한다.
+      객체.update(key=value)
+
+
+   2. save()
+      존재하는 객체를 조회한 뒤 직접 필드를 수정하고 save()를 사용하면 수정된다.
+      객체.save()
+
+삭제(DELETE)
+   delete()
+      객체.delete()로 사용하며 조건에 맞는 모든 행을 삭제한다.
+      get(), filter(), all()과 같이 사용된다.
+
+
+
+
+
+
+
+
+
+
+
+
+

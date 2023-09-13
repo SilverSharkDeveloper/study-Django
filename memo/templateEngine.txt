@@ -1,0 +1,18 @@
+[부모.html]
+   기존 코드
+   {% block name %}
+      부모 코드
+   {% endblock %}
+   기존 코드
+
+[자식.html]
+   {% extends "경로" %}
+   {% block name %}
+      자식 코드
+   {% endblock %}
+
+
+자식.html의 결과 화면
+   기존 코드
+   자식 코드
+   기존 코드
